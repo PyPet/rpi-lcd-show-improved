@@ -1,0 +1,80 @@
+#!/bin/bash
+
+########################################################################
+#
+#  Copyright [2005] - [2020] Alicetech and Adam Florizone
+#  All Rights Reserved.
+# 
+# NOTICE:  All information contained herein is, and remains
+# the property of Alicetech, Adam Florizone,
+# The intellectual and technical concepts contained
+# herein are proprietary to Alicetech and Adam Florizone
+# and may be covered by U.S. and Foreign Patents,
+# patents in process, and are protected by trade secret or copyright law.
+# Dissemination of this information or reproduction of this material
+# is strictly forbidden unless prior written permission is obtained
+# from Alicetech and Adam Florizone.
+#
+
+
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
+exitcode=0
+
+function runTest {
+    DISTROTESTSOURCE="${SCRIPTPATH}/$1"
+
+    export path_root=$(mktemp --directory)
+
+    function test {
+        if [ $? -eq 0 ]; then
+            echo -e "\e[32m[PASS]\e[0m""[$1]" "${@:2}"
+        else
+            echo -e "\e[31m[FAIL]\e[0m""[$1]" "${@:2}"
+            exitcode=1
+        fi
+    }
+
+    function testForErrors {
+        file "${path_root}/boot/overlays"/* | grep --silent "boot CPU=0"
+        test "$@" "Overlay installed into /boot/overlays/" 
+
+        diff -u "${DISTROTESTSOURCE}/boot/config.txt" "${path_root}/boot/config.txt" |  grep --silent "+dtoverlay=tft35a"
+        test "$@" "${DISTROTESTSOURCE}/boot/config.txt edit for dtoverlay" $@
+
+        diff -u "${DISTROTESTSOURCE}/boot/cmdline.txt" "${path_root}/boot/cmdline.txt" |  grep --silent "console=ttyAMA0,115200"
+        test "$@" "${DISTROTESTSOURCE}/boot/cmdline.txt edit for console=ttyAMA0,115200" $@
+        
+        cat "${path_root}/boot/cmdline.txt"
+    }
+
+    if [ -f ${SCRIPTPATH}/../install ]; then
+        mkdir -p ${path_root}/boot/overlays
+        rsync -ra "${DISTROTESTSOURCE}/" "${path_root}/"
+
+        "${SCRIPTPATH}/../install" tft35a
+        testForErrors  "offline"
+
+        rm -r "${path_root}"
+    fi
+
+    mkdir -p ${path_root}/boot/overlays
+    rsync -ra "${DISTROTESTSOURCE}/" "${path_root}/"
+
+    curl -o- https://raw.githubusercontent.com/PyPet/rpi-lcd-show-improved/main/install | SCRIPTPATH=/dev/null bash /dev/stdin tft35a
+    testForErrors "online"
+
+    rm -r "${path_root}"
+}
+
+runTest "default_raspbian"
+runTest "default_berryboot"
+
+if [ ${exitcode} -eq 0 ]; then
+    echo -e "\e[32m[ALL TESTS PASS]\e[0m" 
+else
+    echo -e "\e[31m[TEST(S) FAILED]\e[0m"
+    exitcode=1
+fi
+
+[ ${exitcode} -eq 0 ] || exit ${exitcode}
