@@ -45,6 +45,12 @@ You can change "tft35a" to one of the following: mhs24, mhs32, mhs35, mhs35b, mh
 curl -o- https://raw.githubusercontent.com/PyPet/rpi-lcd-show-improved/main/install | path_root=/media/owner/rootfs path_root_boot=/media/owner/boot bash /dev/stdin tft35a
 ```
 
+# How to install to balenaOS (from Host OS terminal):
+
+``` bash
+curl -o- https://raw.githubusercontent.com/PyPet/rpi-lcd-show-improved/main/install | path_root=/ path_root_boot=/mnt/boot bash /dev/stdin tft35a
+```
+
 # How to run tests before bug report
 ```
 git clone https://github.com/PyPet/rpi-lcd-show-improved.git
