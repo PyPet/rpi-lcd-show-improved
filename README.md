@@ -1,4 +1,6 @@
-# Original: <https://github.com/Alicetech/rpi-lcd-show-improved/blob/main/install>
+# El repo va a ser archivado, (Ver issue)[https://github.com/PyPet/PyPetJS/issues/5#issue-977936872]
+
+## Original: <https://github.com/Alicetech/rpi-lcd-show-improved/blob/main/install>
 
 ## Raspberry Pi improved pin connected LCD install
 
